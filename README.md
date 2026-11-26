@@ -1,99 +1,186 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# poc-nestjs-trpc-backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> A modern type-safe API backend integrating tRPC v10 into NestJS 10 with automatic schema reflection, runtime Zod validation, request observability middleware, and interactive API exploration via tRPC Panel.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Inception (First Commit):** `2025-01-28` • **Batch / Horizon:** `Batch 2024–2025` • **Architecture Domain:** `End-to-End Type-Safe RPC Backend`
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📌 Architecture & Overview
 
-## Project setup
+`nestjs-tRPC` is an architectural demonstration combining the robust modular dependency injection of **NestJS** with the end-to-end compile-time type safety of **tRPC**. Built on top of `nestjs-trpc` (v1.6) and Express, the application exposes Remote Procedure Call (RPC) interfaces defined through TypeScript decorators while automatically generating client contracts without requiring manual schema synchronizations.
 
-```bash
-$ pnpm install
+```
+src/
+├── main.ts                        # Application entrypoint & HTTP server bootstrap (Port 3000)
+├── app.module.ts                  # Root application module wiring TrpcModule and ProductsModule
+├── products/
+│   ├── product.schema.ts          # Zod schema definitions and inferred TypeScript domain types
+│   ├── products.module.ts         # Products feature module registering Service and Router
+│   ├── products.router.ts         # tRPC Router handling Query and Mutation procedures
+│   └── products.service.ts        # Business logic & in-memory state repository
+└── trpc/
+    ├── trpc.module.ts             # Global tRPC configuration, schema auto-generation & middleware
+    ├── trpc-panel.controller.ts   # Express controller serving the trpc-panel documentation UI
+    ├── @generated/
+    │   └── server.ts              # Automatically generated standalone tRPC router contract
+    ├── context/
+    │   ├── app.context.ts         # TRPCContext provider extracting Express Request & Response
+    │   └── context.interface.ts   # Context typing interface definition
+    └── middleware/
+        └── logger.middleware.ts   # Procedural latency, IP, method, and status code logging middleware
 ```
 
-## Compile and run the project
+* **Context:** Architectural proof-of-concept evaluating `nestjs-trpc` as an alternative to REST and GraphQL for full-stack TypeScript applications, eliminating code generation steps and enabling end-to-end type safety between backend services and frontend clients.
+* **Key Patterns:**
+  * **Decorator-Driven RPC Routing:** Procedures are defined using `@Router`, `@Query`, and `@Mutation` decorators directly within NestJS injectable classes (`ProductsRouter`).
+  * **Automated Contract Generation:** Configured with `autoSchemaFile: 'src/trpc/@generated'`, compiling NestJS router classes into standard `@trpc/server` router definitions (`src/trpc/@generated/server.ts`) for frontend client export.
+  * **Scoped Middleware Pipeline:** Procedural middleware (`LoggerMiddleware`) intercepting execution chains, tracking duration in milliseconds, capturing client IP and response status codes.
+  * **Context Injection:** Encapsulation of native Express request and response lifecycle objects inside `AppContext` passed down to procedures via `@Ctx()`.
+  * **Interactive Explorer:** Integrated `trpc-panel` at `/panel` allowing visual testing and inspection of tRPC queries and mutations directly in the browser.
+
+---
+
+## 🛠 Tech Stack
+
+* **Runtime & Framework:** Node.js (>= 18), TypeScript (ES2024 target), NestJS 10 (`@nestjs/core`, `@nestjs/common`, `@nestjs/platform-express`), `pnpm`
+* **RPC & Validation:** `nestjs-trpc` 1.6.1, `@trpc/server` 10.45.2, `zod` 3.24.1
+* **Developer Tooling & UI:** `trpc-panel` 1.3.4
+* **State Management:** In-memory collection (`Product[]`) within `ProductsService`
+* **Testing & Quality:** Jest 29, `ts-jest`, Supertest 7, ESLint, Prettier
+
+---
+
+## ✨ Features & Endpoints
+
+* **Full CRUD Product Management:** In-memory procedural workflows to fetch, create, partially update, and delete product catalog items.
+* **Runtime Input & Output Validation:** Strict schema validation via Zod; invalid inputs automatically return formatted tRPC validation errors (`BAD_REQUEST`).
+* **Observable Procedure Execution:** Execution logs capture latency (`durationMs`), route path, call type (`query` vs `mutation`), HTTP method, and response status.
+* **Interactive Documentation UI:** Web UI available at `http://localhost:3000/panel` to execute queries and mutations without external client setup.
+
+### Key API Routes & Procedures
+
+#### tRPC Procedure Interface (`/trpc`)
+
+The primary API interface is served over the tRPC transport endpoint (`/trpc/<procedurePath>`). Queries are accessed via HTTP `GET` with encoded query parameters, while Mutations are dispatched via HTTP `POST`.
+
+| Procedure Path | RPC Type | Input Schema | Output Schema | Description |
+|---|---|---|---|---|
+| `products.getAllProducts` | `Query` | _None_ (`void`) | `Product[]` | Retrieves all product items stored in memory. |
+| `products.getProductById` | `Query` | `{ id: string }` | `Product` | Retrieves a specific product by ID; throws `NOT_FOUND` if missing. |
+| `products.createProduct` | `Mutation` | `Product` | `Product` | Appends a new product item to the collection. |
+| `products.updateProduct` | `Mutation` | `{ id: string, data: Partial<Product> }` | `Product` | Partially updates fields on an existing product; throws `NOT_FOUND` if missing. |
+| `products.deleteProduct` | `Mutation` | `{ id: string }` | `boolean` | Deletes a product by ID; returns `true` on success or `false` if not found. |
+
+#### HTTP Endpoints
+
+| Method | Route | Output | Description |
+|---|---|---|---|
+| `ALL` / `GET` | `/panel` | `text/html` | Serves the interactive `trpc-panel` UI for executing procedures in browser. |
+| `ALL` | `/trpc/*` | `application/json` | Base HTTP endpoint mounting the tRPC query and mutation handlers. |
+
+> **Note on Data Schema:** In `src/products/product.schema.ts`, the nested property under `details` is defined as `desciption` (notice spelling). The input validation strictly expects this key during `createProduct` and `updateProduct`.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+* **Node.js** `>= 18.0.0`
+* **pnpm** `>= 8.0.0` (or `npm` / `yarn`)
+
+### Installation
 
 ```bash
-# development
-$ pnpm run start
+# Clone the repository
+git clone https://github.com/fabogit/poc-nestjs-trpc-backend.git
+cd poc-nestjs-trpc-backend
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# Install dependencies using pnpm
+pnpm install
 ```
 
-## Run tests
+### Environment Configuration
+
+The application defaults to port `3000`. To customize the listening port, create an optional `.env` file or export `PORT`:
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+PORT=3000
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Running the Application
 
 ```bash
-$ pnpm install -g mau
-$ mau deploy
+# Development mode with hot-reload
+pnpm run start:dev
+
+# Standard start
+pnpm run start
+
+# Production build and run
+pnpm run build
+pnpm run start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Once running, the application will be available at:
+* **tRPC Panel Explorer:** [http://localhost:3000/panel](http://localhost:3000/panel)
+* **tRPC Endpoint Base:** [http://localhost:3000/trpc](http://localhost:3000/trpc)
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🧪 Testing & Verification
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Interacting via tRPC Panel
 
-## Support
+1. Start the server using `pnpm run start:dev`.
+2. Open [http://localhost:3000/panel](http://localhost:3000/panel) in your browser.
+3. Select `products.createProduct` mutation, provide a JSON payload, and execute:
+   ```json
+   {
+     "id": "prod-101",
+     "name": "Mechanical Keyboard",
+     "price": 149.99,
+     "details": {
+       "desciption": "RGB Hot-swappable keyboard",
+       "rating": 5
+     }
+   }
+   ```
+4. Query all stored products using `products.getAllProducts`.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Interacting via cURL
 
-## Stay in touch
+Because tRPC maps procedures over standard HTTP, procedures can be queried directly:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Create a product (Mutation)
+curl -X POST http://localhost:3000/trpc/products.createProduct \
+  -H "Content-Type: application/json" \
+  -d '{"id":"prod-1","name":"Wireless Mouse","price":49.99,"details":{"desciption":"Ergonomic mouse","rating":4}}'
 
-## License
+# Fetch product by ID (Query - URL encoded input)
+curl -G http://localhost:3000/trpc/products.getProductById \
+  --data-urlencode 'input={"id":"prod-1"}'
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Fetch all products (Query)
+curl http://localhost:3000/trpc/products.getAllProducts
+```
+
+### Automated Tests
+
+```bash
+# Unit tests
+pnpm run test
+
+# Test coverage
+pnpm run test:cov
+```
+
+> **Testing Caveat:** The repository contains the default starter e2e test (`test/app.e2e-spec.ts`) asserting `GET /` against an obsolete `AppController`. Because `AppController` was removed in favor of tRPC routing, running `pnpm run test:e2e` yields a 404 response until updated to target tRPC procedures. See the accompanying critique report for a drop-in tRPC E2E test fixture.
+
+---
+
+## 📄 License & Author
+
+Developed by [@fabogit](https://github.com/fabogit).
